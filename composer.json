@@ -1,0 +1,9 @@
+{
+  "name": "drupal/github_actions_example",
+  "type": "drupal-module",
+  "description": "",
+  "keywords": ["Drupal"],
+  "license": "GPL-2.0+",
+  "minimum-stability": "dev",
+  "require": {}
+}
