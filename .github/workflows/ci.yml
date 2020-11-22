@@ -1,0 +1,67 @@
+on: [push]
+name: CI
+env:
+  MYSQL_ROOT_PASSWORD: drupal
+  SIMPLETEST_DB: "mysql://drupal:drupal@mariadb:3306/drupal"
+  SIMPLETEST_BASE_URL: "http://127.0.0.1:8080"
+  DRUPAL_MODULE_NAME: "github_actions_example"
+  DRUPAL_CORE_VERSION: 9.0.x
+jobs:
+  test-contrib:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        php-version: ['7.4']
+    container:
+      image: ghcr.io/tuutti/drupal-php-docker:${{ matrix.php-version }}
+
+    services:
+      mariadb:
+        image: mariadb:10.5
+        env:
+          MYSQL_USER: drupal
+          MYSQL_PASSWORD: drupal
+          MYSQL_DATABASE: drupal
+          MYSQL_ROOT_PASSWORD: drupal
+        ports:
+          - 3306:3306
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+
+      - name: Set variables
+        run: echo "DRUPAL_ROOT=$HOME/drupal" >> $GITHUB_ENV
+
+      - name: Build project
+        run: |
+          # Clone Drupal core to $DRUPAL_ROOT folder.
+          git clone --depth 1 --branch "$DRUPAL_CORE_VERSION" http://git.drupal.org/project/drupal.git/ $DRUPAL_ROOT
+          cd $DRUPAL_ROOT
+          # Add your custom module to composer repositories and install it and it's dependencies.
+          composer config repositories.0 path $GITHUB_WORKSPACE
+          composer require drupal/$DRUPAL_MODULE_NAME
+          # Install Drush (this step can be skipped if you have Drush installed globally)
+          composer require "drush/drush ^10.0"
+          # Install Drupal using minimal installation profile.
+          php -d sendmail_path=$(which true); vendor/bin/drush --yes -v site-install minimal --db-url="$SIMPLETEST_DB"
+          vendor/bin/drush en $DRUPAL_MODULE_NAME simpletest -y
+
+      # Your custom module must have drupal/coder as a dev dependency or have it installed globally.
+      # Your module folder depends on the "type" in your composer.json, for example
+      # drupal-module will be installed to modules/contrib while drupal-custom-module will
+      # be installed to modules/custom folder.
+      - name: Run PHPCS
+        run: |
+          cd $DRUPAL_ROOT
+          vendor/bin/phpcs --config-set installed_paths vendor/drupal/coder/coder_sniffer
+          vendor/bin/phpcs modules/contrib/$DRUPAL_MODULE_NAME --standard=Drupal
+
+      - name: Run PHPUnit tests
+        run: |
+          cd $DRUPAL_ROOT
+          vendor/bin/drush runserver $SIMPLETEST_BASE_URL > /dev/null 2>&1 &
+          # This is only required when running functional-javascript tests.
+          chromedriver --port=4444 > /dev/null 2>&1 &
+          php ./core/scripts/run-tests.sh --php /usr/local/bin/php --color --verbose --url $SIMPLETEST_BASE_URL $DRUPAL_MODULE_NAME
