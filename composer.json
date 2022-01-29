@@ -4,8 +4,5 @@
   "description": "",
   "keywords": ["Drupal"],
   "license": "GPL-2.0+",
-  "minimum-stability": "dev",
-  "require-dev": {
-    "drupal/coder": "^8.3"
-  }
+  "minimum-stability": "dev"
 }
