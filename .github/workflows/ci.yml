@@ -62,7 +62,6 @@ jobs:
       - name: Run PHPCS
         run: |
           cd $DRUPAL_ROOT
-          vendor/bin/phpcs --config-set installed_paths vendor/drupal/coder/coder_sniffer
           vendor/bin/phpcs modules/contrib/$DRUPAL_MODULE_NAME --standard=Drupal
 
       # Chromedriver is only required if you have FunctionalJavascript tests.
