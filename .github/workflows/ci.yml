@@ -48,7 +48,7 @@ jobs:
           composer require drupal/$DRUPAL_MODULE_NAME
           composer run-script drupal-phpunit-upgrade
           composer require "drush/drush ^10.0"
-          composer require "drupal/coder"
+          composer require --dev "drupal/coder"
 
       # Install drupal using minimal installation profile and enable the module.
       - name: Install Drupal
