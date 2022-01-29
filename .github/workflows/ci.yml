@@ -34,40 +34,41 @@ jobs:
       - name: Set variables
         run: echo "DRUPAL_ROOT=$HOME/drupal" >> $GITHUB_ENV
 
-      - name: Build project
+      # Clone Drupal core into $DRUPAL_ROOT folder.
+      - name: Clone drupal
+        run: git clone --depth 1 --branch "$DRUPAL_CORE_VERSION" http://git.drupal.org/project/drupal.git/ $DRUPAL_ROOT
+      
+      # Define our contrib module as a composer repository so we can install the module
+      # from disk using composer.
+      # We have to upgrade phpunit when running tests with php 8+.
+      - name: Install required composer dependencies
         run: |
-          # Clone Drupal core into $DRUPAL_ROOT folder.
-          git clone --depth 1 --branch "$DRUPAL_CORE_VERSION" http://git.drupal.org/project/drupal.git/ $DRUPAL_ROOT
           cd $DRUPAL_ROOT
-          # Add your custom module to composer repositories and install
-          # the module and it's dependencies.
           composer config repositories.0 path $GITHUB_WORKSPACE
           composer require drupal/$DRUPAL_MODULE_NAME
-          # Upgrade phpunit
           composer run-script drupal-phpunit-upgrade
-          # Install Drush. This step can be skipped if you have Drush
-          # installed globally.
           composer require "drush/drush ^10.0"
-          # Install Drupal using minimal installation profile.
+          composer require "drupal/coder"
+
+      # Install drupal using minimal installation profile and enable the module.
+      - name: Install Drupal
+        run: |
+          cd $DRUPAL_ROOT    
           php -d sendmail_path=$(which true); vendor/bin/drush --yes -v site-install minimal --db-url="$SIMPLETEST_DB"
           vendor/bin/drush en $DRUPAL_MODULE_NAME -y
 
-      # Your custom module must have drupal/coder as a dev dependency or have
-      # it installed globally.
-      # Your module folder depends on the "type" in your composer.json, for
-      # example a module of `drupal-module` type will be installed into
-      # modules/contrib folder, while `drupal-custom-module` will be installed
-      # into modules/custom folder.
+      # Change the module folder according to your needs, it's probably either
+      # modules/contrib/$DRUPAL_MODULE_NAME or modules/custom/$DRUPAL_MODULE_NAME.
       - name: Run PHPCS
         run: |
           cd $DRUPAL_ROOT
           vendor/bin/phpcs --config-set installed_paths vendor/drupal/coder/coder_sniffer
           vendor/bin/phpcs modules/contrib/$DRUPAL_MODULE_NAME --standard=Drupal
 
+      # Chromedriver is only required if you have FunctionalJavascript tests.
       - name: Run PHPUnit tests
         run: |
           cd $DRUPAL_ROOT
           vendor/bin/drush runserver $SIMPLETEST_BASE_URL > /dev/null 2>&1 &
-          # This is only required when running functional-javascript tests.
           chromedriver --port=4444 > /dev/null 2>&1 &
           php ./core/scripts/run-tests.sh --dburl $SIMPLETEST_DB --php /usr/local/bin/php --color --verbose --sqlite /tmp/test.sqlite --url $SIMPLETEST_BASE_URL $DRUPAL_MODULE_NAME
