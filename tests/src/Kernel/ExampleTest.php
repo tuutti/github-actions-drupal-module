@@ -16,13 +16,13 @@ class ExampleTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['github_actions_example'];
+  protected static $modules = ['github_actions_example'];
 
   /**
    * Tests something.
    */
   public function testSomething() : void {
-    $this->assertEqual(static::$modules, ['github_actions_example']);
+    $this->assertEquals(static::$modules, ['github_actions_example']);
   }
 
 }
