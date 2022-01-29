@@ -43,6 +43,8 @@ jobs:
           # the module and it's dependencies.
           composer config repositories.0 path $GITHUB_WORKSPACE
           composer require drupal/$DRUPAL_MODULE_NAME
+          # Upgrade phpunit
+          composer run-script drupal-phpunit-upgrade
           # Install Drush. This step can be skipped if you have Drush
           # installed globally.
           composer require "drush/drush ^10.0"
