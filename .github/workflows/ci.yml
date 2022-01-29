@@ -5,14 +5,14 @@ env:
   SIMPLETEST_DB: "mysql://drupal:drupal@mariadb:3306/drupal"
   SIMPLETEST_BASE_URL: "http://127.0.0.1:8080"
   DRUPAL_MODULE_NAME: "github_actions_example"
-  DRUPAL_CORE_VERSION: 9.0.x
+  DRUPAL_CORE_VERSION: 9.3.x
 jobs:
   test-contrib:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
       matrix:
-        php-version: ['7.4']
+        php-version: ['7.4', '8.0']
     container:
       image: ghcr.io/tuutti/drupal-php-docker:${{ matrix.php-version }}
 
@@ -36,22 +36,26 @@ jobs:
 
       - name: Build project
         run: |
-          # Clone Drupal core to $DRUPAL_ROOT folder.
+          # Clone Drupal core into $DRUPAL_ROOT folder.
           git clone --depth 1 --branch "$DRUPAL_CORE_VERSION" http://git.drupal.org/project/drupal.git/ $DRUPAL_ROOT
           cd $DRUPAL_ROOT
-          # Add your custom module to composer repositories and install it and it's dependencies.
+          # Add your custom module to composer repositories and install
+          # the module and it's dependencies.
           composer config repositories.0 path $GITHUB_WORKSPACE
           composer require drupal/$DRUPAL_MODULE_NAME
-          # Install Drush (this step can be skipped if you have Drush installed globally)
+          # Install Drush. This step can be skipped if you have Drush
+          # installed globally.
           composer require "drush/drush ^10.0"
           # Install Drupal using minimal installation profile.
           php -d sendmail_path=$(which true); vendor/bin/drush --yes -v site-install minimal --db-url="$SIMPLETEST_DB"
-          vendor/bin/drush en $DRUPAL_MODULE_NAME simpletest -y
+          vendor/bin/drush en $DRUPAL_MODULE_NAME -y
 
-      # Your custom module must have drupal/coder as a dev dependency or have it installed globally.
-      # Your module folder depends on the "type" in your composer.json, for example
-      # drupal-module will be installed to modules/contrib while drupal-custom-module will
-      # be installed to modules/custom folder.
+      # Your custom module must have drupal/coder as a dev dependency or have
+      # it installed globally.
+      # Your module folder depends on the "type" in your composer.json, for
+      # example a module of `drupal-module` type will be installed into
+      # modules/contrib folder, while `drupal-custom-module` will be installed
+      # into modules/custom folder.
       - name: Run PHPCS
         run: |
           cd $DRUPAL_ROOT
