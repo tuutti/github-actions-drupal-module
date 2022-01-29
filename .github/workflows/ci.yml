@@ -48,7 +48,7 @@ jobs:
           composer require "drush/drush ^10.0"
           # Install Drupal using minimal installation profile.
           php -d sendmail_path=$(which true); vendor/bin/drush --yes -v site-install minimal --db-url="$SIMPLETEST_DB"
-          vendor/bin/drush en $DRUPAL_MODULE_NAME simpletest -y
+          vendor/bin/drush en $DRUPAL_MODULE_NAME -y
 
       # Your custom module must have drupal/coder as a dev dependency or have
       # it installed globally.
@@ -68,4 +68,4 @@ jobs:
           vendor/bin/drush runserver $SIMPLETEST_BASE_URL > /dev/null 2>&1 &
           # This is only required when running functional-javascript tests.
           chromedriver --port=4444 > /dev/null 2>&1 &
-          php ./core/scripts/run-tests.sh --php /usr/local/bin/php --color --verbose --url $SIMPLETEST_BASE_URL $DRUPAL_MODULE_NAME
+          php ./core/scripts/run-tests.sh --dburl $SIMPLETEST_DB --php /usr/local/bin/php --color --verbose --url $SIMPLETEST_BASE_URL $DRUPAL_MODULE_NAME
