@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        php-version: ['7.4', '8.0']
+        php-version: ['7.4', '8.0', '8.1']
     container:
       image: ghcr.io/tuutti/drupal-php-docker:${{ matrix.php-version }}
 
@@ -48,7 +48,7 @@ jobs:
           composer require "drush/drush ^10.0"
           # Install Drupal using minimal installation profile.
           php -d sendmail_path=$(which true); vendor/bin/drush --yes -v site-install minimal --db-url="$SIMPLETEST_DB"
-          vendor/bin/drush en $DRUPAL_MODULE_NAME -y
+          vendor/bin/drush en $DRUPAL_MODULE_NAME simpletest -y
 
       # Your custom module must have drupal/coder as a dev dependency or have
       # it installed globally.
