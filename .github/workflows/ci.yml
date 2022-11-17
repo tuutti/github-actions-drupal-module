@@ -121,10 +121,11 @@ jobs:
       # Chromium browser is required to run functional javascript tests.
       # You can remove or uncomment this step if you don't have any functional
       # js tests.
-      - name: Run PHPUnit tests
+      - name: Start chromium-browser
         working-directory: ${{ env.DRUPAL_ROOT }}
         run: |
           chromium-browser --headless --disable-gpu \
+            --no-sandbox \
             --remote-debugging-port=9222 &
 
       # Run tests using core's run-tests.sh script. See the example below
