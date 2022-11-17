@@ -36,4 +36,3 @@ class JsSettingTest extends WebDriverTestBase {
   }
 
 }
-
