@@ -11,7 +11,7 @@ use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
  *
  * @group github_actions_example
  */
-class JsSettingsTest extends WebDriverTestBase {
+class JsSettingTest extends WebDriverTestBase {
 
   /**
    * {@inheritdoc}
